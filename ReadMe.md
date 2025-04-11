@@ -1,4 +1,4 @@
-<img width="1214" alt="Screenshot 2025-04-11 at 4 36 00 PM" src="https://github.com/user-attachments/assets/5f1a47ed-2070-4de2-81ad-3a66b0c9a95d" />
+
 # Gridrun Escape Protocol
 
 A terminal-based C++ survival game where you navigate a grid, evade enemies, and reach safety!
