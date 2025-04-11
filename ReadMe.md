@@ -58,13 +58,12 @@ g++ -std=c++17 -o gridrun gridrun.cpp
 - Smarter enemy AI
 - Save/load game state
 
----<img width="1214" alt="Screenshot 2025-04-11 at 4 36 00 PM" src="https://github.com/user-attachments/assets/f08f5b76-0282-47a2-930d-41635792e82f" />
-<img width="1213" alt="Screenshot 2025-04-11 at 4 35 42 PM" src="https://github.com/user-attachments/assets/5f891f87-c6c0-44e1-9ece-ea941a78736c" />
+---
 
 
-
-
-<img width="1203" alt="Screenshot 2025-04-11 at 4 35 29 PM" src="https://github.com/user-attachments/assets/d1dd1e91-289a-4e6e-8db6-228536ee2238" />
+<img width="1203" alt="Game begins" src="https://github.com/user-attachments/assets/d1dd1e91-289a-4e6e-8db6-228536ee2238" />
+<img width="1213" alt="During Game" src="https://github.com/user-attachments/assets/5f891f87-c6c0-44e1-9ece-ea941a78736c" />
+<img width="1214" alt="Game Over!!" src="https://github.com/user-attachments/assets/f08f5b76-0282-47a2-930d-41635792e82f" />
 
 
 Have fun escaping... while you still can. 🏃💨
