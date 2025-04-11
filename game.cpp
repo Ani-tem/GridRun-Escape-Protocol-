@@ -13,15 +13,16 @@ using namespace std;
 
 const int N = 20;
 char grid[N][N];
-pair<int, int> player;
+pair<int, int> player1;
+pair<int, int> player2;
 vector<pair<int, int>> enemies;
 pair<int, int> safePoint;
 int dx[] = {-1, 1, 0, 0};
 int dy[] = {0, 0, -1, 1};
 int level = 1;
 int score = 0;
-int health = 3;
-int enemyMoveDelay = 500; // milliseconds
+int health1 = 3, health2 = 3;
+int enemyMoveDelay = 10;
 bool multiplayer = false;
 bool paused = false;
 
@@ -72,8 +73,13 @@ void setupLevel() {
         for (int j = 0; j < N; ++j)
             grid[i][j] = '.';
 
-    player = {0, 0};
-    grid[player.first][player.second] = 'P';
+    player1 = {0, 0};
+    grid[player1.first][player1.second] = '1';
+
+    if (multiplayer) {
+        player2 = {0, N - 1};
+        grid[player2.first][player2.second] = '2';
+    }
 
     enemies.clear();
     for (int i = 0; i < level; ++i) {
@@ -98,8 +104,11 @@ void printGrid() {
             cout << grid[i][j] << ' ';
         cout << '\n';
     }
-    cout << "Level: " << level << "  Score: " << score << "  Health: " << health << "\n";
-    cout << "Reach 'X' to advance. '+' restores health. 'E' is enemy. Press 'q' to quit, 'p' to pause/resume.\n";
+    cout << "Level: " << level << "  Score: " << score 
+         << "  P1 Health: " << health1 
+         << "  P2 Health: " << (multiplayer ? to_string(health2) : "N/A") << "\n";
+    cout << "Reach 'X' to advance. '+' restores health. 'E' is enemy. 'q' to quit, 'p' to pause/resume.\n";
+    if (multiplayer) cout << "P1: w a s d | P2: i j k l\n";
 }
 
 char getInput() {
@@ -146,16 +155,15 @@ vector<pair<int, int>> dijkstraPath(pair<int, int> src, pair<int, int> target) {
     return path;
 }
 
-void movePlayer(char dir) {
+void movePlayer(pair<int, int> &player, int &health, char dir, char symbol) {
     int nx = player.first, ny = player.second;
-    if (dir == 'w') nx--;
-    if (dir == 's') nx++;
-    if (dir == 'a') ny--;
-    if (dir == 'd') ny++;
+    if (dir == 'w' || dir == 'i') nx--;
+    if (dir == 's' || dir == 'k') nx++;
+    if (dir == 'a' || dir == 'j') ny--;
+    if (dir == 'd' || dir == 'l') ny++;
+
     if (valid(nx, ny)) {
-        if (grid[nx][ny] == '+') {
-            health = min(health + 1, 5);
-        }
+        if (grid[nx][ny] == '+') health = min(health + 1, 5);
         if (grid[nx][ny] == 'X') {
             level++;
             score += 10 * level;
@@ -165,26 +173,42 @@ void movePlayer(char dir) {
         }
         grid[player.first][player.second] = '.';
         player = {nx, ny};
-        grid[nx][ny] = 'P';
+        grid[nx][ny] = symbol;
     }
 }
 
 void moveEnemies() {
     for (auto& enemy : enemies) {
         grid[enemy.first][enemy.second] = '.';
-        auto path = dijkstraPath(enemy, player);
+
+        pair<int, int> target = (dijkstraPath(enemy, player1).size() <= dijkstraPath(enemy, player2).size() || !multiplayer) ? player1 : player2;
+        auto path = dijkstraPath(enemy, target);
         if (!path.empty()) enemy = path[0];
-        if (enemy == player) {
-            health--;
-            if (health == 0) {
+
+        if (enemy == player1) {
+            health1--;
+            if (health1 == 0) {
                 clearScreen();
-                cout << "\U0001F480 Game Over: Enemy caught you!\nFinal Score: " << score << "\n";
+                cout << "\U0001F480 Game Over: Player 1 was caught!\nFinal Score: " << score << "\n";
                 exit(0);
             }
-            grid[player.first][player.second] = '.';
-            player = {0, 0};
-            grid[player.first][player.second] = 'P';
+            grid[player1.first][player1.second] = '.';
+            player1 = {0, 0};
+            grid[player1.first][player1.second] = '1';
         }
+
+        if (multiplayer && enemy == player2) {
+            health2--;
+            if (health2 == 0) {
+                clearScreen();
+                cout << "\U0001F480 Game Over: Player 2 was caught!\nFinal Score: " << score << "\n";
+                exit(0);
+            }
+            grid[player2.first][player2.second] = '.';
+            player2 = {0, N - 1};
+            grid[player2.first][player2.second] = '2';
+        }
+
         grid[enemy.first][enemy.second] = 'E';
     }
 }
@@ -193,7 +217,7 @@ void mainMenu() {
     clearScreen();
     cout << "===== Gridrun Escape Protocol =====\n";
     cout << "1. Single Player\n";
-    cout << "2. Multiplayer (coming soon)\n";
+    cout << "2. Multiplayer\n";
     cout << "Choose option: ";
     char choice;
     cin >> choice;
@@ -209,7 +233,6 @@ int main() {
     printGrid();
 
     while (true) {
-        if (player == safePoint) continue;
         char input = getInput();
         if (input == 'q') {
             cout << "\nGame exited. Final Score: " << score << "\n";
@@ -223,11 +246,15 @@ int main() {
             }
         }
         if (!paused) {
-            movePlayer(input);
+            if (string("wasd").find(input) != string::npos)
+                movePlayer(player1, health1, input, '1');
+            else if (multiplayer && string("ijkl").find(input) != string::npos)
+                movePlayer(player2, health2, input, '2');
+
             moveEnemies();
             printGrid();
             score++;
-            std::this_thread::sleep_for(std::chrono::milliseconds(enemyMoveDelay));
+            this_thread::sleep_for(chrono::milliseconds(enemyMoveDelay));
         }
     }
 
